@@ -1,4 +1,4 @@
-# Algeo 2 - 23128
+# Algeo02 - 23128
 
 Jadi, dalam src ada dua folder, frontend dan backend
 
