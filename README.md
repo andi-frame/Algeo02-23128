@@ -1,4 +1,4 @@
-## Algeo 2 - 23128
+# Algeo 2 - 23128
 
 Jadi, dalam src ada dua folder, frontend dan backend
 
@@ -17,11 +17,11 @@ npm install
 npm run dev
 ```
 
-Program telah berjalan dan dapat diakses melalui route berikut:
+Program telah berjalan dan dapat diakses melalui route berikut:\
 http://localhost:3000/
 
 
-# Setup backend
+## Setup backend
 
 Pertama, masuk ke directory backend:
 
@@ -36,7 +36,7 @@ python -m venv .venv
 source .venv/Scripts/activate
 ```
 
-Pastikan telah terdapat '(venv)' pada terminal.
+Pastikan telah terdapat '(venv)' pada terminal.\
 Selanjutnya, lakukan instalasi library dari requirements.txt
 
 ```bash
@@ -49,8 +49,8 @@ Selanjutnya jalankan server:
 fastapi dev main.py
 ```
 
-Server telah dapat berjalan pada:
+Server telah dapat berjalan pada:\
 http://127.0.0.1:8000
 
-Kemudian buka link dokumentasi otomatis berikut untuk melihat daftar API yang telah dibuat:
+Kemudian buka link dokumentasi otomatis berikut untuk melihat daftar API yang telah dibuat:\
 http://127.0.0.1:8000/docs
