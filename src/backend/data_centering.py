@@ -3,7 +3,7 @@ from image_processing import resize_image
 import numpy as np
 
 def data_centering(image_paths):
-    dataset = np.array([resize_image(turn_grayscale(image_path), (2, 2)) for image_path in image_paths])
+    dataset = np.array([resize_image(turn_grayscale(image_path)) for image_path in image_paths])
     N, m, n = dataset.shape
 
     myu = np.zeros((m, n), dtype=float)

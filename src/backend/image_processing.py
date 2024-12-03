@@ -21,9 +21,9 @@ def turn_grayscale(image_path):
     return grayscale
 
 
-def resize_image(image_array, output_size):
+def resize_image(image_array):
     original_height, original_width = image_array.shape
-    output_height, output_width = output_size
+    output_height, output_width = (10, 10)
 
     row_ratio = original_height / output_height
     col_ratio = original_width / output_width
