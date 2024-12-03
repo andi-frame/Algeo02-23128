@@ -1,9 +1,10 @@
 from data_centering import data_centering
 import numpy as np
 
-def singular_value_decomposition(standardized_data, num_components):
+def singular_value_decomposition(standardized_data, num_components=1):
     N, M = standardized_data.shape
     C = np.zeros((M, M))  
+
     for i in range(M):
         for j in range(M):
             sum_cov = 0
@@ -26,28 +27,18 @@ def singular_value_decomposition(standardized_data, num_components):
 
             b_k = b_k1
 
-        eigenvalue = np.dot(b_k.T, np.dot(A, b_k))
-        eigenvector = b_k
+        eigenvalue = np.dot(b_k.T, np.dot(A, b_k))  
+        eigenvector = b_k  
 
         return eigenvalue, eigenvector
 
-    eigenvalues = []
-    eigenvectors = []
-    for _ in range(num_components):
-        eigenvalue, eigenvector = power_iteration(C)
+    eigenvalue, eigenvector = power_iteration(C)
 
-        eigenvalues.append(eigenvalue)
-        eigenvectors.append(eigenvector)
-
-        C -= eigenvalue * np.outer(eigenvector, eigenvector)
-
-    eigenvalues = np.array(eigenvalues)
-    U_k = np.array(eigenvectors).T  
+    U_k = eigenvector.reshape(-1, 1)
 
     Z = np.zeros((N, num_components))
     for i in range(N):
         for j in range(num_components):
-            for k in range(M):
-                Z[i, j] += standardized_data[i, k] * U_k[k, j]
+            Z[i, j] = np.dot(standardized_data[i, :], U_k[:, j])
 
-    return Z, U_k, eigenvalues
+    return Z, U_k, eigenvalue
