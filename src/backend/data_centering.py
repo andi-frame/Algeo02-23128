@@ -20,4 +20,4 @@ def data_centering(image_paths):
             for col in range(n):
                 standardized[i, row, col] = dataset[i, row, col] - myu[row, col]
 
-    return standardized
+    return myu, standardized
