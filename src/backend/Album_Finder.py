@@ -3,13 +3,13 @@ import numpy as np
 import os
 
 def turn_grayscale(image_path):
-    img = Image.open(image_path).convert("L")  
+    img = Image.open(image_path).convert("L") 
     grayscale = np.array(img, dtype=np.float32)  
     return grayscale
 
 def resize_image(image_array, output_height=10, output_width=10):
     img = Image.fromarray(image_array)
-    img_resized = img.resize((output_width, output_height), Image.ANTIALIAS)  
+    img_resized = img.resize((output_width, output_height), Image.ANTIALIAS) 
     resized_array = np.array(img_resized, dtype=image_array.dtype)
     return resized_array
 
