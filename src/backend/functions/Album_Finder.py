@@ -9,12 +9,11 @@ def image_to_blob(image_path):
 
     img_byte_arr = io.BytesIO()
 
-    image.save(img_byte_arr, format=image.format)
+    image.save(img_byte_arr, format="PNG")
 
     img_byte_arr = img_byte_arr.getvalue()
     
     return img_byte_arr
-
 
 # Fungsi untuk mengonversi gambar menjadi grayscale
 def turn_grayscale(image_blob):
