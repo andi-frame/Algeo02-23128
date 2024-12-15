@@ -3,7 +3,7 @@ import UploadPlaylist from "@/components/upload_playlist";
 
 const Page = () => {
   return (
-    <div>
+    <div className="flex justify-center items-center">
       <UploadPlaylist />
     </div>
   );
