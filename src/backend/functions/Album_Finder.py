@@ -1,11 +1,25 @@
 from PIL import Image
 import numpy as np
+import io
 import os
 
+
+def image_to_blob(image_path):
+    image = Image.open(image_path)
+
+    img_byte_arr = io.BytesIO()
+
+    image.save(img_byte_arr, format=image.format)
+
+    img_byte_arr = img_byte_arr.getvalue()
+    
+    return img_byte_arr
+
+
 # Fungsi untuk mengonversi gambar menjadi grayscale
-def turn_grayscale(image_path):
-    img = Image.open(image_path).convert("L")  # Ubah ke grayscale
-    grayscale = np.array(img, dtype=np.float32)  # Mengubah ke array numpy dengan tipe float
+def turn_grayscale(image_blob):
+    img = Image.open(io.BytesIO(image_blob)).convert("L")  
+    grayscale = np.array(img, dtype=np.float32)  
     return grayscale
 
 # Fungsi untuk meresize gambar ke ukuran tertentu
