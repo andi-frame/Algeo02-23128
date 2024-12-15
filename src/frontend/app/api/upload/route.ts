@@ -1,56 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
+// app/api/upload/route.js
+import { NextResponse } from "next/server";
+import api from "@/api";
 
-export async function POST(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function POST(request: { formData: () => any }) {
+  const formData = await request.formData();
+  const images = formData.get("images");
+  const audios = formData.get("audios");
+  const mapper = formData.get("mapper");
+
+  const formDataToSend = new FormData();
+  formDataToSend.append("images", images);
+  formDataToSend.append("audios", audios);
+  formDataToSend.append("mapper", mapper);
+
   try {
-    const body = await request.formData();
-
-    const formData = new FormData();
-    formData.append("file", body.get("file") as File);
-    formData.append("upload_type", body.get("upload_type") as string);
-
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload`, formData, {
+    const response = await api.post("/upload", formDataToSend, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-
-    return NextResponse.json(response.data, {
-      status: response.status,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error("Upload error:", error);
-
-    if (error.response) {
-      return NextResponse.json(error.response.data, {
-        status: error.response.status,
-      });
-    } else if (error.request) {
-      return NextResponse.json(
-        {
-          message: "No response received from server",
-        },
-        {
-          status: 500,
-        }
-      );
-    } else {
-      return NextResponse.json(
-        {
-          message: "Error in upload request",
-          error: error.message,
-        },
-        {
-          status: 500,
-        }
-      );
-    }
+    return NextResponse.json(response.data);
+  } catch (error) {
+    return NextResponse.json(error, { status: 500 });
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};

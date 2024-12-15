@@ -1,128 +1,68 @@
-import os
-import uuid
-import tempfile
-import json
-import zipfile
-import traceback
-from dotenv import load_dotenv
-from typing import Optional
-
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import (
-    FastAPI, 
-    File, 
-    UploadFile, 
-    Form, 
-    HTTPException,
-    Request
-)
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
-from firebase_admin import (
-    credentials, 
-    initialize_app, 
-    storage
-)
-import firebase_admin
+import zipfile
+from io import BytesIO
+import json
+import os
+import datetime
+from backend.db.index import supabase
+from backend.db.index import bucket
 
-load_dotenv()
-
-FIREBASE_CREDENTIALS_JSON = os.getenv('FIREBASE_CREDENTIALS_JSON')
-FIREBASE_STORAGE_BUCKET = os.getenv('FIREBASE_STORAGE_BUCKET')
-
-if not FIREBASE_CREDENTIALS_JSON or not FIREBASE_STORAGE_BUCKET:
-    raise ValueError("Firebase configuration is missing")
-
-try:
-    cred_dict = json.loads(FIREBASE_CREDENTIALS_JSON)
-    cred = credentials.Certificate(cred_dict)
-except json.JSONDecodeError:
-    raise ValueError("Invalid Firebase credentials JSON")
-
-if not firebase_admin._apps:
-    firebase_app = initialize_app(cred, {
-        'storageBucket': FIREBASE_STORAGE_BUCKET
-    })
-
-bucket = storage.bucket()
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000"
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
 @app.post("/upload")
-async def upload_zip(
-    file: UploadFile = File(...), 
-    upload_type: str = Form(...)
+async def upload_files(
+    playlistName: str = "Playlist Name",
+    images: UploadFile = File(...),
+    audios: UploadFile = File(...),
+    mapper: UploadFile = File(...)
 ):
-    """
-    Upload ZIP file to Firebase Storage
-    
-    Args:
-    - file: Uploaded ZIP file
-    - upload_type: Type of upload (images/audios/mapper)
-    
-    Returns:
-    - Dictionary with upload details
-    """
     try:
-        valid_types = ['images', 'audios', 'mapper']
-        if upload_type not in valid_types:
-            raise HTTPException(status_code=400, detail="Invalid upload type")
+        # Extract and process the uploaded files
+        images_zip = zipfile.ZipFile(BytesIO(await images.read()))
+        audios_zip = zipfile.ZipFile(BytesIO(await audios.read()))
+        mapper_content = await mapper.read()
+        
+        # Ensure mapper.json is in the expected format
+        mapper_data = mapper_content.decode('utf-8')
+        mapper_list = json.loads(mapper_data)
+        
+        # Debug: Print mapper_list to confirm format
+        print("Mapper List:", mapper_list)
+        
+        # Process images and audios
+        for file_info in images_zip.infolist():
+            print(f"Extracting image: {file_info.filename}")
+            with images_zip.open(file_info) as file:
+                # Process each image (e.g., upload to Firebase)
+                pass
 
-        unique_filename = f"{upload_type}/{uuid.uuid4()}.zip"
+        for file_info in audios_zip.infolist():
+            print(f"Extracting audio: {file_info.filename}")
+            with audios_zip.open(file_info) as file:
+                # Process each audio (e.g., upload to Firebase)
+                pass
+        
+        return JSONResponse(content={"message": "Files uploaded successfully"})
+    
+    except Exception as e:
+        print("Error during file upload:", e)
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".zip") as temp_zip:
-            content = await file.read()
-            temp_zip.write(content)
-            temp_zip_path = temp_zip.name
-
-        try:
-            with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
-                if upload_type == 'images':
-                    valid_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.webp')
-                elif upload_type == 'audios':
-                    valid_extensions = ('.wav',)
-                else: # mapper
-                    valid_extensions = ('.txt', '.csv')
-                
-                invalid_files = [
-                    f for f in zip_ref.namelist() 
-                    if not f.lower().endswith(valid_extensions)
-                ]
-                
-                if invalid_files:
-                    raise ValueError(f"Invalid files in ZIP: {invalid_files}")
-        except (zipfile.BadZipFile, ValueError) as zip_error:
-            os.unlink(temp_zip_path)
-            raise HTTPException(status_code=400, detail=str(zip_error))
-
-        try:
-            blob = bucket.blob(unique_filename)
-            blob.upload_from_filename(temp_zip_path)
-            blob.make_public()
-        except:
-            pass
-    except:
-        pass
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    print("Unexpected error:", traceback.format_exc())
-    return JSONResponse(
-        status_code=500, 
-        content={
-            "message": "Internal server error",
-            "error": str(exc),
-            "traceback": traceback.format_exc()
-        }
-    )
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
