@@ -1,0 +1,52 @@
+[
+    {
+        "audio_name": "Master of Puppet",
+        "audio_file": "master_of_puppet.wav",
+        "pic_name": "master_0f_puppet.png"
+    },
+    {
+        "audio_name": "Take Away",
+        "audio_file": "take_away.wav",
+        "pic_name": "take_away.png"
+    },
+    {
+        "audio_name": "Solo",
+        "audio_file": "solo.wav",
+        "pic_name": "solo.png"
+    },
+    {
+        "audio_name": "Bad",
+        "audio_file": "bad.wav",
+        "pic_name": "bad.png"
+    },
+    {
+        "audio_name": "Thrift Shop",
+        "audio_file": "thrift_shop.wav",
+        "pic_name": "thrift_shop.png"
+    },
+    {
+        "audio_name": "Stereo Hearts",
+        "audio_file": "stereo_hearts.wav",
+        "pic_name": "stereo_hearts.png"
+    },
+    {
+        "audio_name": "Just Dance",
+        "audio_file": "just_dance.wav",
+        "pic_name": "just_dance.png"
+    },
+    {
+        "audio_name": "Dancing",
+        "audio_file": "dancing.wav",
+        "pic_name": "dancing.png"
+    },
+    {
+        "audio_name": "Locked Away",
+        "audio_file": "locked_away.wav",
+        "pic_name": "locked_away.png"
+    },
+    {
+        "audio_name": "SkyFall",
+        "audio_file": "skyfall.wav",
+        "pic_name": "skyfall.png"
+    }
+]
