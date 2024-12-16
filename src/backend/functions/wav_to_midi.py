@@ -1,35 +1,48 @@
 from basic_pitch.inference import predict
 from basic_pitch import ICASSP_2022_MODEL_PATH
 import pretty_midi
+from io import BytesIO
 import numpy as np
 
-def calculate_tempo(wav_path):
+
+def calculate_tempo(wav_blob):
+    """
+    Calculate the tempo of a WAV audio file represented as a blob.
+    """
+    # Load WAV data from blob
+    wav_blob.seek(0)  # Ensure the blob is at the start
+    wav_path = BytesIO(wav_blob.read())
+
     # Get the predicted MIDI data as a PrettyMIDI object
     _, midi_data, _ = predict(wav_path, ICASSP_2022_MODEL_PATH)
 
     # Extract onsets from the PrettyMIDI object
     onsets = midi_data.get_onsets()
 
-    # Calculate the inter-onset intervals (IOI) between successive onsets
+    # Calculate inter-onset intervals (IOI) and tempo
     iois = np.diff(onsets)
-
-    # Estimate the average IOI
-    avg_ioi = np.mean(iois)  # average time between beats (in seconds)
-
-    # Calculate tempo (BPM): tempo is the inverse of the average IOI, converted to minutes
-    tempo = 60 / avg_ioi if avg_ioi != 0 else 0  # BPM = 60 / IOI (in seconds)
+    avg_ioi = np.mean(iois) if len(iois) > 0 else 0
+    tempo = 60 / avg_ioi if avg_ioi != 0 else 0  # BPM
 
     return tempo
 
-def wav_to_midi(wav_path, midi_path):
-    # Calculate the tempo from the audio
-    tempo = calculate_tempo(wav_path)
+
+def wav_to_midi(wav_blob):
+    """
+    Converts a WAV audio blob to a MIDI blob.
+    """
+    # Calculate the tempo from the audio blob
+    tempo = calculate_tempo(wav_blob)
     print(f"Estimated tempo: {tempo} BPM")
+
+    # Reload the WAV blob for conversion
+    wav_blob.seek(0)  # Reset to the beginning
+    wav_path = BytesIO(wav_blob.read())
 
     # Get the predicted MIDI data as a PrettyMIDI object
     _, midi_data, _ = predict(wav_path, ICASSP_2022_MODEL_PATH)
 
-    # Create a new PrettyMIDI object to hold the final result
+    # Create a new PrettyMIDI object
     midi_file = pretty_midi.PrettyMIDI()
 
     # Create an Instrument instance (Program 0 is usually piano)
@@ -43,11 +56,9 @@ def wav_to_midi(wav_path, midi_path):
         end_time = note.end
         instrument.notes.append(pretty_midi.Note(velocity=64, pitch=pitch, start=start_time, end=end_time))
 
-    # Add a tempo change at time 0
-    # midi_file.notes.append(pretty_midi('set_tempo', tempo=int(tempo * 1000)))# Set tempo at time 0 in the track
+    # Save the MIDI data to a blob
+    midi_blob = BytesIO()
+    midi_file.write(midi_blob)
+    midi_blob.seek(0)  # Reset the blob to the beginning
 
-    # Save the MIDI file
-    midi_file.write(midi_path)
-
-# Example usage
-# wav_to_midi('dewi.wav', 'dewi.mid')
+    return midi_blob

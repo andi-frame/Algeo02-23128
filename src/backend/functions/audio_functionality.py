@@ -67,6 +67,11 @@ def audio_query(database, query_blob):
     sorted_results = sorted(results, key=lambda x: x['similarity'], reverse=True)
     return sorted_results
 
+def wav_to_vector(wav_blob):
+    midi_blob = wav_to_midi.wav_to_midi(wav_blob)
+    return audio.process(midi_blob)
+
+
 # if __name__ == "__main__":
 #     audioDB = build_audio_database_from_wav("test/TestAudio")
 #     print(audioDB)
