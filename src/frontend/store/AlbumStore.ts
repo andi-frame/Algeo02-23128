@@ -18,13 +18,16 @@ export interface TrackType {
 }
 
 interface TrackAlbumType {
+  nowPlaying: TrackType | null;
   tracks: TrackType[] | null;
   playlists: PlaylistType[] | null;
   setTracks: (tracksData: TrackType[] | null) => void;
   setPlaylists: (playlistsData: PlaylistType[] | null) => void;
+  setNowPlaying: (trackNow: TrackType | null) => void;
 }
 
 export const useAlbumStore = create<TrackAlbumType>((set) => ({
+  nowPlaying: null,
   tracks: null,
   playlists: null,
   setTracks: (tracksData) => {
@@ -32,5 +35,8 @@ export const useAlbumStore = create<TrackAlbumType>((set) => ({
   },
   setPlaylists: (playlistsData) => {
     set({ playlists: playlistsData });
+  },
+  setNowPlaying: (trackNow) => {
+    set({ nowPlaying: trackNow });
   },
 }));

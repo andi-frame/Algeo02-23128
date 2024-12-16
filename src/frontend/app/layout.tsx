@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "@/components/navbar";
+import Player from "@/components/Player";
 
 const geistSans = localFont({
   src: "./_fonts/GeistVF.woff",
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} text-black bg-spotify-black-2`}>
         <Navbar />
         {children}
+        <Player />
       </body>
     </html>
   );

@@ -1,9 +1,13 @@
 import React from "react";
 import Image from "next/image";
-import { TrackType } from "@/store/AlbumStore";
+import { TrackType, useAlbumStore } from "@/store/AlbumStore";
 
 const TrackCard = ({ track }: { track: TrackType }) => {
-  const handleTrackOnClick = () => {};
+  const setNowPlaying = useAlbumStore((state) => state.setNowPlaying);
+
+  const handleTrackOnClick = () => {
+    setNowPlaying(track);
+  };
 
   return (
     <div
