@@ -3,15 +3,11 @@ import numpy as np
 import io
 
 
-def image_to_blob(image_path):
-    image = Image.open(image_path)
-
+def image_to_blob(image_file):
+    image = Image.open(image_file)
     img_byte_arr = io.BytesIO()
-
     image.save(img_byte_arr, format="PNG")
-
     img_byte_arr = img_byte_arr.getvalue()
-    
     return img_byte_arr
 
 # Fungsi untuk mengonversi gambar menjadi grayscale

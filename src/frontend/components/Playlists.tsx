@@ -6,7 +6,7 @@ import PlaylistCard from "./PlaylistCard";
 const playlist = {
   name: "Playlist Name",
   image:
-    "https://storage.googleapis.com/maca-deb33.appspot.com/HMO/terakhir%20banget%20tes%20ini_2024-12-16T02%3A11%3A34.066589/images/Master%20of%20Puppet_2024-12-16T02%3A11%3A35.486325.png",
+    "https://storage.googleapis.com/maca-deb33.appspot.com/HMO/Testing%20Integration%202_2024-12-16T13%3A41%3A18.968806/images/Solo_2024-12-16T13%3A41%3A36.560786.png",
 };
 
 const Playlists = () => {

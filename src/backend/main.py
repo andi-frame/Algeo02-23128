@@ -9,7 +9,7 @@ from backend.db.index import supabase
 from backend.db.index import bucket
 import uuid
 import logging
-from backend.functions.Album_Finder import data_centering, singular_value_decomposition, query_projection, image_to_blob
+from backend.functions.Album_Finder import data_centering, singular_value_decomposition
 app = FastAPI()
 
 origins = [
@@ -41,23 +41,30 @@ async def upload_files(
     try:
         datetimenow = datetime.now().isoformat()
 
-        # Extract and process the uploaded files
         images_zip = zipfile.ZipFile(BytesIO(await images.read()))
         audios_zip = zipfile.ZipFile(BytesIO(await audios.read()))
         mapper_content = await mapper.read()
         
-        # Ensure mapper.json is in the expected format
         mapper_data = json.loads(mapper_content.decode('utf-8'))
 
-        # Create a new playlist entry
         playlist_id = str(uuid.uuid4())
         supabase.table('playlist').insert({
             'id': playlist_id,
             'name': playlistName,
             'created_at': datetimenow
         }).execute()
+
+        image_paths = [images_zip.open(item['pic_name']) for item in mapper_data]
+        myu, standardized_data = data_centering(image_paths)
+        projections, Uk, _ = singular_value_decomposition(standardized_data, 2)
+
+        supabase.table('playlist').update({
+            'myu': myu.tolist(),
+            'uk': Uk.tolist(),
+            'projections': projections.tolist()
+        }).eq('id', playlist_id).execute()
         
-        for item in mapper_data:
+        for idx, item in enumerate(mapper_data):
             name = item['audio_name']
             image_filename = item['pic_name']
             audio_filename = item['audio_file']
@@ -82,6 +89,7 @@ async def upload_files(
                 'name': name,
                 'image_url': image_url,
                 'music_url': audio_url,
+                'image_idx': idx
             }).execute()
 
         return JSONResponse(content={"message": "Files uploaded successfully"})
