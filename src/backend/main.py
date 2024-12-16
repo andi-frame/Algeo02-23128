@@ -9,7 +9,8 @@ from backend.db.index import supabase
 from backend.db.index import bucket
 import uuid
 import logging
-from backend.functions.Album_Finder import data_centering, singular_value_decomposition
+import numpy as np
+from backend.functions.Album_Finder import data_centering, singular_value_decomposition, query_projection, compute_euclidean_distance
 app = FastAPI()
 
 origins = [
@@ -98,6 +99,56 @@ async def upload_files(
         print("Error during file upload:", e)
         logging.error("Error during file upload: %s", e, exc_info=True)
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.post("/query-by-image")
+async def query_by_image(
+    query_image: UploadFile = File(...), 
+    top_k: int = Form(...) 
+):
+    try:
+        query_image_content = await query_image.read()
+        query_image_blob = BytesIO(query_image_content)
+        
+        svd_data_records = supabase.table('playlist').select('id, myu, uk, projections, track(id, image_url, music_url, name)').execute()
+        svd_data = svd_data_records.data
+
+        all_similarities = []
+
+        for record in svd_data:
+            myu = np.array(record['myu'])
+            Uk = np.array(record['uk'])
+            projections = np.array(record['projections'])
+            playlist_id = record['id']
+            tracks = record['track']
+
+            query_proj = query_projection(query_image_blob, myu, Uk)
+
+            distances = compute_euclidean_distance(query_proj, projections)
+            max_distance = max(distances)
+
+            for idx, distance in enumerate(distances):
+                similarity_percentage = (1 - (distance / max_distance)) * 100 
+
+                all_similarities.append({
+                    'distance': distance,
+                    'similarity_percentage': round(similarity_percentage, 2),
+                    'playlist_id': playlist_id,
+                    'track_idx': idx,
+                    'image_url': tracks[idx]['image_url'],
+                    'music_url': tracks[idx]['music_url'],
+                    'track_name': tracks[idx]['name']
+                })
+
+        all_similarities = sorted(all_similarities, key=lambda x: x['distance'])
+        top_tracks = all_similarities[:top_k]
+
+        return JSONResponse(content={"top_tracks": top_tracks})
+    except Exception as e:
+        print("Error during query:", e)
+        logging.error("Error during query: %s", e, exc_info=True)
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
 
 if __name__ == "__main__":
     import uvicorn
