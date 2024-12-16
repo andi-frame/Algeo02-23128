@@ -56,7 +56,8 @@ http://127.0.0.1:8000/docs
 ## Fitur
 - Image Retrieval
 - Music Information Retrieval
-- Microphone
+- Store Data to Firebase Storage
+- Store Data to Supabase Database
 
 ## Kontribusi
 - Muhammad Aulia Azka (13523137) : Image Retrieval
