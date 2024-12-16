@@ -6,6 +6,7 @@ const TrackCard = ({ track }: { track: TrackType }) => {
   const setNowPlaying = useAlbumStore((state) => state.setNowPlaying);
 
   const handleTrackOnClick = () => {
+    setNowPlaying(null);
     setNowPlaying(track);
   };
 
