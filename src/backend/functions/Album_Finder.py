@@ -1,7 +1,6 @@
 from PIL import Image
 import numpy as np
 import io
-import os
 
 
 def image_to_blob(image_path):

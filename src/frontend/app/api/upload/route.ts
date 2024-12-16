@@ -15,7 +15,6 @@ export async function POST(request: { formData: () => any }) {
   formDataToSend.append("images", images);
   formDataToSend.append("audios", audios);
   formDataToSend.append("mapper", mapper);
-  formDataToSend.append("datetimenow", new Date().toISOString());
 
   try {
     const response = await api.post("/upload", formDataToSend, {
