@@ -1,7 +1,7 @@
 import os
 import shutil
 import audio
-# import wav_to_midi
+import wav_to_midi
 
 def build_audio_database(folderpath):
     """
@@ -18,6 +18,46 @@ def build_audio_database(folderpath):
             database.append({'name': filename, 'data': processed_data})
 
     return database
+
+
+
+def audio_query(database, query_path):
+    """
+    1. Use process() on query_path (.mid)
+    2. Iterate through database to get each element's similarity with query, then append the result with its name to a result array
+    3. Sort the result
+    4. Return the sorted result
+    """
+    print(f"Processing query MIDI file: {query_path}")
+    query_data = audio.process(query_path)
+    results = []
+    for entry in database:
+        similarity_score = audio.calculate_similarity(query_data, entry['data'])
+        results.append({'name': entry['name'], 'similarity': similarity_score})
+    sorted_results = sorted(results, key=lambda x: x['similarity'], reverse=True)
+    return sorted_results
+
+def path_to_blob(midi_path):
+    """
+    Converts a MIDI file path to a binary blob.
+
+    Args:
+        midi_path (str): Path to the MIDI file.
+
+    Returns:
+        bytes: Binary data of the MIDI file.
+    """
+    with open(midi_path, 'rb') as f:
+        return f.read()
+
+def process_wav_blob(blob):
+    midi_blob = wav_to_midi.wav_to_midi(blob)
+    return audio.process(midi_blob)
+
+# print(process_wav_blob(path_to_blob("src/backend/functions/tes01.wav")))
+
+# audio.process(path_to_blob("src/backend/functions/dewicut10.mid"))
+#print(audio.process("src/backend/functions/dewicut10.mid"))
 
 # def build_audio_database_from_wav(folder_path):
 #     """
@@ -37,24 +77,6 @@ def build_audio_database(folderpath):
 #     shutil.rmtree(midi_folder)
 
 #     return database
-
-def audio_query(database, query_path):
-    """
-    1. Use process() on query_path (.mid)
-    2. Iterate through database to get each element's similarity with query, then append the result with its name to a result array
-    3. Sort the result
-    4. Return the sorted result
-    """
-    print(f"Processing query MIDI file: {query_path}")
-    query_data = audio.process(query_path)
-    results = []
-    for entry in database:
-        similarity_score = audio.calculate_similarity(query_data, entry['data'])
-        results.append({'name': entry['name'], 'similarity': similarity_score})
-    sorted_results = sorted(results, key=lambda x: x['similarity'], reverse=True)
-    return sorted_results
-
-
 
 # if __name__ == "__main__":
 #     audioDB = build_audio_database_from_wav("test/TestAudio")

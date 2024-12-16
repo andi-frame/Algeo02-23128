@@ -1,34 +1,35 @@
 import mido
 from collections import defaultdict
+import io
 
-def detect_melody_channel(midi_file):
+def detect_melody_channel(midi_blob):
     """
-    Detects the main melody channel in a MIDI file based on the most active channel.
+    Detects the main melody channel in a MIDI blob based on the most active channel.
 
     Args:
-        midi_file (str): Path to the MIDI file.
+        midi_blob (bytes): MIDI data in a binary blob.
 
     Returns:
         int: Channel number of the main melody.
     """
-    midi = mido.MidiFile(midi_file)
+    midi = mido.MidiFile(file=io.BytesIO(midi_blob))
     channel_note_count = defaultdict(int)
+
     for track in midi.tracks:
         for msg in track:
             if not msg.is_meta and msg.type == 'note_on' and msg.velocity > 0:
                 channel_note_count[msg.channel] += 1
+
     melody_channel = max(channel_note_count, key=channel_note_count.get, default=0)
     return melody_channel
 
-import mido
-
-def midi_to_pitch_array_with_tempo(midi_file):
+def midi_to_pitch_array_with_tempo(midi_blob):
     """
-    Converts a MIDI file to an array of pitches per quarter note and retrieves tempo in BPM.
+    Converts a MIDI blob to an array of pitches per quarter note and retrieves tempo in BPM.
     Automatically detects the melody channel.
 
     Args:
-        midi_file (str): Path to the MIDI file.
+        midi_blob (bytes): MIDI data in a binary blob.
 
     Returns:
         tuple:
@@ -36,9 +37,9 @@ def midi_to_pitch_array_with_tempo(midi_file):
             - float: Tempo in BPM.
             - int: ticks_per_beat for the MIDI file.
     """
-    midi = mido.MidiFile(midi_file)
-    melody_channel = detect_melody_channel(midi_file)
-    print(f"Detected melody channel: {melody_channel}")
+    midi = mido.MidiFile(file=io.BytesIO(midi_blob))
+    melody_channel = detect_melody_channel(midi_blob)
+    # print(f"Detected melody channel: {melody_channel}")
     default_tempo = 500000
     tempo = default_tempo
     current_beat = 0
@@ -53,11 +54,11 @@ def midi_to_pitch_array_with_tempo(midi_file):
                 current_beat += delta_seconds * (8 / (60 / (60 * 1_000_000 / tempo)))
                 if msg.type == 'note_on' and msg.velocity > 0 and msg.channel == melody_channel:
                     quarter_pitches.append((current_beat, msg.note))
-    
+
     if not quarter_pitches:
-        print("No pitches detected in the MIDI file.")
+        # print("No pitches detected in the MIDI data.")
         return [], 60 * 1_000_000 / tempo, midi.ticks_per_beat
-    
+
     # Find the max quarter note
     max_quarter_beat = int(round(max(quarter for quarter, _ in quarter_pitches)))
     pitch_array = [-1] * (max_quarter_beat + 1)
@@ -67,7 +68,7 @@ def midi_to_pitch_array_with_tempo(midi_file):
         idx = int(round(quarter))
         if idx < len(pitch_array):
             pitch_array[idx] = pitch
-    
+
     bpm = 60 * 1_000_000 / tempo
     return pitch_array, bpm, midi.ticks_per_beat
 
@@ -345,7 +346,7 @@ def calculate_similarity(array1, array2, atb_weight=0.6,rtb_weight=0.2, ftb_weig
 def process(path):
     pitch_array, bpm, ticks_per_beat = midi_to_pitch_array_with_tempo(path)
     filtered = filter_pitch_array(pitch_array)
-    print(len(filtered))
+    # print(len(filtered))
     
     window_size = 40
     hop_size = 8
