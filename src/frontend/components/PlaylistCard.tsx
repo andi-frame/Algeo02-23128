@@ -1,18 +1,14 @@
 "use client";
+import { PlaylistType } from "@/store/AlbumStore";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
-
-export interface PlaylistType {
-  name: string;
-  image: string;
-}
 
 const PlaylistCard = ({ playlist }: { playlist: PlaylistType }) => {
   const router = useRouter();
 
   const handlePlaylistOnClick = () => {
-    
+
   };
 
   return (

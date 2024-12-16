@@ -110,7 +110,7 @@ async def query_by_image(
         query_image_content = await query_image.read()
         query_image_blob = BytesIO(query_image_content)
         
-        svd_data_records = supabase.table('playlist').select('id, myu, uk, projections, track(id, image_url, music_url, name)').execute()
+        svd_data_records = supabase.table('playlist').select('id, myu, uk, projections, name, track(id, image_url, music_url, name)').execute()
         svd_data = svd_data_records.data
 
         all_similarities = []
@@ -120,6 +120,7 @@ async def query_by_image(
             Uk = np.array(record['uk'])
             projections = np.array(record['projections'])
             playlist_id = record['id']
+            playlist_name = record['name']
             tracks = record['track']
 
             query_proj = query_projection(query_image_blob, myu, Uk)
@@ -134,6 +135,7 @@ async def query_by_image(
                     'distance': distance,
                     'similarity_percentage': round(similarity_percentage, 2),
                     'playlist_id': playlist_id,
+                    'playlist_name': playlist_name,
                     'track_idx': idx,
                     'image_url': tracks[idx]['image_url'],
                     'music_url': tracks[idx]['music_url'],

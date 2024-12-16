@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import PlaylistCard from "./PlaylistCard";
 
 const playlist = {
+  id: "1",
   name: "Playlist Name",
   image:
     "https://storage.googleapis.com/maca-deb33.appspot.com/HMO/Testing%20Integration%202_2024-12-16T13%3A41%3A18.968806/images/Solo_2024-12-16T13%3A41%3A36.560786.png",

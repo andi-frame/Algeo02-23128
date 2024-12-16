@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export interface PlaylistType {
+  id: string;
   name: string;
   image: string;
 }
@@ -9,6 +10,7 @@ export interface TrackType {
   distance: number;
   similarity_percentage: number;
   playlist_id: string;
+  playlist_name: string;
   track_idx: number;
   image_url: string;
   music_url: string;
