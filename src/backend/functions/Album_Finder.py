@@ -34,7 +34,7 @@ def turn_to_1D(image_array):
 
 # Fungsi untuk menghilangkan rata-rata (data centering)
 def data_centering(image_paths):
-    dataset = np.array([resize_image(turn_grayscale(image_path)) for image_path in image_paths])
+    dataset = np.array([resize_image(turn_grayscale(image_to_blob(image_path))) for image_path in image_paths])
     N, m, n = dataset.shape  # Dapatkan dimensi dataset
 
     myu = np.mean(dataset, axis=0)  # Hitung rata-rata gambar
@@ -51,7 +51,7 @@ def singular_value_decomposition(standardized_data, num_components=5):
 
 # Fungsi untuk memproyeksikan gambar query ke dalam ruang komponen utama
 def query_projection(query_image_path, myu, Uk):
-    query_grayscale = turn_grayscale(query_image_path)
+    query_grayscale = turn_grayscale(image_to_blob(query_image_path))
     query_resized = resize_image(query_grayscale)
     query_flattened = turn_to_1D(query_resized)
 
