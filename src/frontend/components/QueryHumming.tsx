@@ -12,7 +12,7 @@ const QueryHumming = () => {
             <input
               className="file-input file-input-success file-input-bordered bg-white text-spotify-black-2"
               type="file"
-              accept=".wav"
+              accept=".mid"
             />
           </div>
           <button type="submit" className="btn w-1/2 btn-success text-white text-lg">

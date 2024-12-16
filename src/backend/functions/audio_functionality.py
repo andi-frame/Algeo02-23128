@@ -1,9 +1,9 @@
 import os
-import shutil
-import audio
-import backend.functions.wav_to_midi as wav_to_midi
-from io import BytesIO
-from tempfile import TemporaryDirectory
+# import shutil
+import backend.functions.audio as audio
+# import backend.functions.wav_to_midi as wav_to_midi
+# from io import BytesIO
+# from tempfile import TemporaryDirectory
 
 
 def build_audio_database(folderpath):
@@ -53,9 +53,9 @@ def path_to_blob(midi_path):
     with open(midi_path, 'rb') as f:
         return f.read()
 
-def process_wav_blob(blob):
-    midi_blob = wav_to_midi.wav_to_midi(blob)
-    return audio.process(midi_blob)
+# def process_wav_blob(blob):
+#     midi_blob = wav_to_midi.wav_to_midi(blob)
+#     return audio.process(midi_blob)
 
 # print(process_wav_blob(path_to_blob("src/backend/functions/tes01.wav")))
 

@@ -11,6 +11,7 @@ import uuid
 import logging
 import numpy as np
 from backend.functions.Album_Finder import data_centering, singular_value_decomposition, query_projection, compute_euclidean_distance
+from backend.functions.audio import process
 
 app = FastAPI()
 
@@ -72,7 +73,6 @@ async def upload_files(
             'projections': projections.tolist()
         }).eq('id', playlist_id).execute()
 
-        # wav_blobs = []
         
         for idx, item in enumerate(mapper_data):
             name = item['audio_name']
@@ -89,12 +89,13 @@ async def upload_files(
             # Extract and upload audio
             audio_file = audios_zip.open(audio_filename)
             audio_content = audio_file.read()
-            audio_path = f"HMO/{playlistName}_{datetimenow}/audios/{name}_{datetime.now().isoformat()}.wav"
+            audio_path = f"HMO/{playlistName}_{datetimenow}/audios/{name}_{datetime.now().isoformat()}.mid"
             print(f"Uploading {audio_path}...\n")
-            audio_url = upload_to_firebase(audio_path, audio_content, "audio/wav")
+            audio_url = upload_to_firebase(audio_path, audio_content, "audio/midi")
 
             # Extract audio file for processing
-            # wav_blobs.append(BytesIO(audio_file.read()))
+            audio_blob = BytesIO(audio_content)
+            audio_vector = process(audio_blob)
 
             # Insert track into the database
             supabase.table('track').insert({
@@ -102,10 +103,9 @@ async def upload_files(
                 'name': name,
                 'image_url': image_url,
                 'music_url': audio_url,
-                'image_idx': idx
+                'image_idx': idx,
+                'processed_music': audio_vector,
             }).execute()
-
-        # audioDB = build_audio_database_from_wav_blobs(wav_blobs)
 
         return JSONResponse(content={"message": "Files uploaded successfully"})
     
