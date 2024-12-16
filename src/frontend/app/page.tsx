@@ -16,7 +16,7 @@ export default function Home() {
     <div className="bg-spotify-black-1/50 flex flex-col justify-center items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <Query />
       <button className="btn-success btn text-white" onClick={resetOnClick}>
-        Reset
+        {type == "playlists" ? "Back" : "Reset"}
       </button>
       {type == "playlists" && <Playlists />}
       {type == "tracks" && <Tracks />}

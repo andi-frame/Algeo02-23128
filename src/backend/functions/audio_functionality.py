@@ -1,5 +1,5 @@
 import audio
-import wav_to_midi
+import backend.functions.wav_to_midi as wav_to_midi
 from io import BytesIO
 from tempfile import TemporaryDirectory
 

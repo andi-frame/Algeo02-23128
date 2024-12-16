@@ -345,7 +345,7 @@ def calculate_similarity(array1, array2, atb_weight=0.6,rtb_weight=0.2, ftb_weig
 def process(path):
     pitch_array, bpm, ticks_per_beat = midi_to_pitch_array_with_tempo(path)
     filtered = filter_pitch_array(pitch_array)
-    print(len(filtered))
+    # print(len(filtered))
     
     window_size = 40
     hop_size = 8
