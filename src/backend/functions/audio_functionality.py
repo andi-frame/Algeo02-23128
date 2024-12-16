@@ -1,56 +1,69 @@
-import os
-import shutil
 import audio
 import wav_to_midi
+from io import BytesIO
+from tempfile import TemporaryDirectory
 
-def build_audio_database(folderpath):
+
+def build_audio_database_from_blobs(midi_blobs):
     """
-    1. Get folder of .mid files from folderpath
-    2. Use process() on each .mid file and append the result with its name to a result array
-    3. Return result array
+    1. Accepts a list of blobs or file-like objects for MIDI files.
+    2. Processes each file and appends the result with its name to a result array.
+    3. Returns the result array.
     """
     database = []
-    for filename in os.listdir(folderpath):
-        if filename.endswith('.mid'):
-            filepath = os.path.join(folderpath, filename)
-            print(f"Processing MIDI file: {filename}")
-            processed_data = audio.process(filepath)
+    for midi_blob in midi_blobs:
+        filename = midi_blob.filename
+        print(f"Processing MIDI file: {filename}")
+        with BytesIO(midi_blob.read()) as midi_data:
+            processed_data = audio.process(midi_data)
             database.append({'name': filename, 'data': processed_data})
 
     return database
 
-def build_audio_database_from_wav(folder_path):
+
+def build_audio_database_from_wav_blobs(wav_blobs):
     """
-    1. Get folder of .wav files from folderpath
-    2. Convert each .wav to .mid and save all in a folder
-    3. Use build_audio_database on that newly created folder
+    1. Accepts a list of blobs or file-like objects for WAV files.
+    2. Converts each WAV to MIDI using `wav_to_midi`.
+    3. Processes the resulting MIDI files using `build_audio_database_from_blobs`.
+    4. Returns the database array.
     """
-    midi_folder = os.path.join(folder_path, 'converted_midis')
-    os.makedirs(midi_folder, exist_ok=True)
-    for filename in os.listdir(folder_path):
-        if filename.endswith('.wav'):
-            wav_path = os.path.join(folder_path, filename)
-            midi_path = os.path.join(midi_folder, f"{os.path.splitext(filename)[0]}.mid")
+    midi_blobs = []
+
+    with TemporaryDirectory() as temp_dir:
+        for wav_blob in wav_blobs:
+            filename = wav_blob.filename
             print(f"Converting WAV file to MIDI: {filename}")
-            wav_to_midi.wav_to_midi(wav_path, midi_path)
-    database = build_audio_database(midi_folder)
-    shutil.rmtree(midi_folder)
+            midi_path = f"{temp_dir}/{filename.replace('.wav', '.mid')}"
+            with BytesIO(wav_blob.read()) as wav_data:
+                wav_to_midi.wav_to_midi(wav_data, midi_path)
+            
+            # Read back the converted MIDI file as a blob
+            with open(midi_path, 'rb') as midi_file:
+                midi_blobs.append(BytesIO(midi_file.read()))
+                midi_blobs[-1].filename = filename.replace('.wav', '.mid')
 
-    return database
+    return build_audio_database_from_blobs(midi_blobs)
 
-def audio_query(database, query_path):
+
+def audio_query(database, query_blob):
     """
-    1. Use process() on query_path (.mid)
-    2. Iterate through database to get each element's similarity with query, then append the result with its name to a result array
-    3. Sort the result
-    4. Return the sorted result
+    1. Accepts a database array and a query blob for a MIDI file.
+    2. Processes the query MIDI file.
+    3. Iterates through the database to calculate similarity with each entry.
+    4. Sorts the results by similarity score.
+    5. Returns the sorted result array.
     """
-    print(f"Processing query MIDI file: {query_path}")
-    query_data = audio.process(query_path)
+    filename = query_blob.filename
+    print(f"Processing query MIDI file: {filename}")
+    with BytesIO(query_blob.read()) as query_data:
+        query_processed = audio.process(query_data)
+
     results = []
     for entry in database:
-        similarity_score = audio.calculate_similarity(query_data, entry['data'])
+        similarity_score = audio.calculate_similarity(query_processed, entry['data'])
         results.append({'name': entry['name'], 'similarity': similarity_score})
+
     sorted_results = sorted(results, key=lambda x: x['similarity'], reverse=True)
     return sorted_results
 
