@@ -11,7 +11,7 @@ import uuid
 import logging
 import numpy as np
 from backend.functions.Album_Finder import data_centering, singular_value_decomposition, query_projection, compute_euclidean_distance
-from backend.functions.audio import process
+from backend.functions.audio import process, calculate_similarity
 
 app = FastAPI()
 
@@ -192,6 +192,42 @@ async def query_by_image(
         print("Error during query:", e)
         logging.error("Error during query: %s", e, exc_info=True)
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.post("/query-by-humming")
+async def query_by_humming(
+    query_midi: UploadFile = File(...), 
+    top_k: int = Form(...) 
+):
+    try:
+
+        midi_content = await query_midi.read()
+        midi_blob = BytesIO(midi_content)
+        midi_vector = process(midi_blob)
+        tracks = supabase.table("track").select("*").execute()
+
+        similarities = []
+        for track in tracks.data:
+            track_processed_data = track['processed_music']
+            similarity = calculate_similarity(midi_vector, track_processed_data)
+
+            similarities.append({
+                "id": track['id'],
+                "name": track['name'],
+                "similarity": similarity,
+                "music_url": track['music_url'],
+                "image_url": track['image_url'],
+            })
+
+        top_similar_tracks = sorted(similarities, key=lambda x: x['similarity'], reverse=True)[:top_k]
+        
+        return JSONResponse(content={"results": top_similar_tracks}, status_code=200)
+    
+    except Exception as e:
+        print("Error during query:", e)
+        logging.error("Error during query: %s", e, exc_info=True)
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
 
 
 if __name__ == "__main__":

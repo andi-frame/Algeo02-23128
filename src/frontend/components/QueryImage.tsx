@@ -12,6 +12,7 @@ const QueryImage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const setTracks = useAlbumStore((state) => state.setTracks);
   const [responseTime, setResponseTime] = useState<number | null>(null);
+  const setIsHumming = useAlbumStore((state) => state.setIsHumming);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -60,6 +61,7 @@ const QueryImage = () => {
       setResponseTime(duration);
 
       setTracks(response.data["top_tracks"]);
+      setIsHumming(false);
 
       console.log("Upload success:", response.data);
       setUploadProgress(0);

@@ -1,13 +1,13 @@
 import React from "react";
 import Image from "next/image";
-import { TrackType, useAlbumStore } from "@/store/AlbumStore";
+import { TrackHumming } from "@/store/AlbumStore";
 
-const TrackCard = ({ track }: { track: TrackType }) => {
-  const setNowPlaying = useAlbumStore((state) => state.setNowPlaying);
+const TrackHummingCard = ({ track }: { track: TrackHumming }) => {
+  // const setNowPlaying = useAlbumStore((state) => state.setNowPlaying);
 
   const handleTrackOnClick = () => {
     // setNowPlaying(null);
-    setNowPlaying(track);
+    // setNowPlaying(track);
   };
 
   return (
@@ -25,13 +25,11 @@ const TrackCard = ({ track }: { track: TrackType }) => {
         />
       </figure>
       <div className="mx-5">
-        <div className="text-xl font-semibold mb-5">{track.track_name}</div>
-        <div>Playlist: {track.playlist_name}</div>
-        <div>Similarity: {track.similarity_percentage}%</div>
-        <div>Distance: {track.distance.toPrecision(4)} </div>
+        <div className="text-xl font-semibold mb-5">{track.name}</div>
+        <div>Similarity: {track.similarity * 100}%</div>
       </div>
     </div>
   );
 };
 
-export default TrackCard;
+export default TrackHummingCard;
