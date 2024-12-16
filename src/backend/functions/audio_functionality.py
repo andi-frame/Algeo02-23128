@@ -1,71 +1,85 @@
+import os
+import shutil
 import audio
 import backend.functions.wav_to_midi as wav_to_midi
 from io import BytesIO
 from tempfile import TemporaryDirectory
 
 
-def build_audio_database_from_blobs(midi_blobs):
+def build_audio_database(folderpath):
     """
-    1. Accepts a list of blobs or file-like objects for MIDI files.
-    2. Processes each file and appends the result with its name to a result array.
-    3. Returns the result array.
+    1. Get folder of .mid files from folderpath
+    2. Use process() on each .mid file and append the result with its name to a result array
+    3. Return result array
     """
     database = []
-    for midi_blob in midi_blobs:
-        filename = midi_blob.filename
-        print(f"Processing MIDI file: {filename}")
-        with BytesIO(midi_blob.read()) as midi_data:
-            processed_data = audio.process(midi_data)
+    for filename in os.listdir(folderpath):
+        if filename.endswith('.mid'):
+            filepath = os.path.join(folderpath, filename)
+            print(f"Processing MIDI file: {filename}")
+            processed_data = audio.process(filepath)
             database.append({'name': filename, 'data': processed_data})
 
     return database
 
 
-def build_audio_database_from_wav_blobs(wav_blobs):
+
+def audio_query(database, query_path):
     """
-    1. Accepts a list of blobs or file-like objects for WAV files.
-    2. Converts each WAV to MIDI using `wav_to_midi`.
-    3. Processes the resulting MIDI files using `build_audio_database_from_blobs`.
-    4. Returns the database array.
+    1. Use process() on query_path (.mid)
+    2. Iterate through database to get each element's similarity with query, then append the result with its name to a result array
+    3. Sort the result
+    4. Return the sorted result
     """
-    midi_blobs = []
-
-    with TemporaryDirectory() as temp_dir:
-        for wav_blob in wav_blobs:
-            filename = wav_blob.filename
-            print(f"Converting WAV file to MIDI: {filename}")
-            midi_path = f"{temp_dir}/{filename.replace('.wav', '.mid')}"
-            with BytesIO(wav_blob.read()) as wav_data:
-                wav_to_midi.wav_to_midi(wav_data, midi_path)
-            
-            # Read back the converted MIDI file as a blob
-            with open(midi_path, 'rb') as midi_file:
-                midi_blobs.append(BytesIO(midi_file.read()))
-                midi_blobs[-1].filename = filename.replace('.wav', '.mid')
-
-    return build_audio_database_from_blobs(midi_blobs)
-
-
-def audio_query(database, query_blob):
-    """
-    1. Accepts a database array and a query blob for a MIDI file.
-    2. Processes the query MIDI file.
-    3. Iterates through the database to calculate similarity with each entry.
-    4. Sorts the results by similarity score.
-    5. Returns the sorted result array.
-    """
-    filename = query_blob.filename
-    print(f"Processing query MIDI file: {filename}")
-    with BytesIO(query_blob.read()) as query_data:
-        query_processed = audio.process(query_data)
-
+    print(f"Processing query MIDI file: {query_path}")
+    query_data = audio.process(query_path)
     results = []
     for entry in database:
-        similarity_score = audio.calculate_similarity(query_processed, entry['data'])
+        similarity_score = audio.calculate_similarity(query_data, entry['data'])
         results.append({'name': entry['name'], 'similarity': similarity_score})
-
     sorted_results = sorted(results, key=lambda x: x['similarity'], reverse=True)
     return sorted_results
+
+def path_to_blob(midi_path):
+    """
+    Converts a MIDI file path to a binary blob.
+
+    Args:
+        midi_path (str): Path to the MIDI file.
+
+    Returns:
+        bytes: Binary data of the MIDI file.
+    """
+    with open(midi_path, 'rb') as f:
+        return f.read()
+
+def process_wav_blob(blob):
+    midi_blob = wav_to_midi.wav_to_midi(blob)
+    return audio.process(midi_blob)
+
+# print(process_wav_blob(path_to_blob("src/backend/functions/tes01.wav")))
+
+# audio.process(path_to_blob("src/backend/functions/dewicut10.mid"))
+#print(audio.process("src/backend/functions/dewicut10.mid"))
+
+# def build_audio_database_from_wav(folder_path):
+#     """
+#     1. Get folder of .wav files from folderpath
+#     2. Convert each .wav to .mid and save all in a folder
+#     3. Use build_audio_database on that newly created folder
+#     """
+#     midi_folder = os.path.join(folder_path, 'converted_midis')
+#     os.makedirs(midi_folder, exist_ok=True)
+#     for filename in os.listdir(folder_path):
+#         if filename.endswith('.wav'):
+#             wav_path = os.path.join(folder_path, filename)
+#             midi_path = os.path.join(midi_folder, f"{os.path.splitext(filename)[0]}.mid")
+#             print(f"Converting WAV file to MIDI: {filename}")
+#             wav_to_midi.wav_to_midi(wav_path, midi_path)
+#     database = build_audio_database(midi_folder)
+#     shutil.rmtree(midi_folder)
+
+#     return database
 
 # if __name__ == "__main__":
 #     audioDB = build_audio_database_from_wav("test/TestAudio")
