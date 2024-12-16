@@ -23,7 +23,6 @@ const Player = () => {
       audio.addEventListener("timeupdate", updateTime);
       audio.addEventListener("loadedmetadata", updateDuration);
 
-      // Load the metadata to update the duration
       if (audio.readyState >= 1) {
         updateDuration();
       }

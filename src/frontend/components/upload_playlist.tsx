@@ -6,10 +6,11 @@ import axios from "axios";
 const UploadPlaylist = () => {
   const [playlistName, setPlaylistName] = useState<string>("");
   const [files, setFiles] = useState<{
+    playlistImage: File | null;
     images: File | null;
     audios: File | null;
     mapper: File | null;
-  }>({ images: null, audios: null, mapper: null });
+  }>({ playlistImage: null, images: null, audios: null, mapper: null });
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
@@ -27,8 +28,12 @@ const UploadPlaylist = () => {
       setErrorMessage("Playlist name is required.");
       return false;
     }
-    if (!files.images || !files.audios || !files.mapper) {
+    if (!files.images || !files.audios || !files.mapper || !files.playlistImage) {
       setErrorMessage("All files (images, audios, and mapper) are required.");
+      return false;
+    }
+    if (files.playlistImage && files.playlistImage.name.split(".").pop() !== "png") {
+      setErrorMessage("Image file must be a png file.");
       return false;
     }
     if (files.images && files.images.name.split(".").pop() !== "zip") {
@@ -53,6 +58,7 @@ const UploadPlaylist = () => {
 
     const formData = new FormData();
     formData.append("playlistName", playlistName as string);
+    formData.append("playlistImage", files.playlistImage as File);
     formData.append("images", files.images as File);
     formData.append("audios", files.audios as File);
     formData.append("mapper", files.mapper as File);
@@ -88,6 +94,18 @@ const UploadPlaylist = () => {
               onChange={handleFileChange}
               value={playlistName}
               className="p-2 border rounded-full px-4"
+            />
+          </div>
+        </div>
+        <div className="flex flex-col">
+          <div className="flex flex-col rounded-xl p-3 ring-1 ring-spotify-green pt-2">
+            <label className="mb-2">Playlist Image:</label>
+            <input
+              type="file"
+              name="playlistImage"
+              accept=".png"
+              onChange={handleFileChange}
+              className="file-input file-input-success file-input-bordered bg-white text-spotify-black-2"
             />
           </div>
         </div>

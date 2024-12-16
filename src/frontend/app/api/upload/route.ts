@@ -5,6 +5,7 @@ import api from "@/api";
 export async function POST(request: { formData: () => any }) {
   const formData = await request.formData();
   const playlistName = formData.get("playlistName");
+  const playlistImage = formData.get("playlistImage");
   const images = formData.get("images");
   const audios = formData.get("audios");
   const mapper = formData.get("mapper");
@@ -12,6 +13,7 @@ export async function POST(request: { formData: () => any }) {
 
   const formDataToSend = new FormData();
   formDataToSend.append("playlistName", playlistName);
+  formDataToSend.append("playlistImage", playlistImage);
   formDataToSend.append("images", images);
   formDataToSend.append("audios", audios);
   formDataToSend.append("mapper", mapper);

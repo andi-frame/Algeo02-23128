@@ -11,6 +11,8 @@ const QueryImage = () => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const setTracks = useAlbumStore((state) => state.setTracks);
+  const [responseTime, setResponseTime] = useState<number | null>(null);
+  const setIsHumming = useAlbumStore((state) => state.setIsHumming);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -39,6 +41,8 @@ const QueryImage = () => {
     formData.append("top_k", String(top));
     formData.append("query_image", image as File);
 
+    const startTime = Date.now();
+
     try {
       const response = await api.post("/query-by-image", formData, {
         headers: {
@@ -50,7 +54,14 @@ const QueryImage = () => {
         },
       });
 
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+
+      // Set response time to the state
+      setResponseTime(duration);
+
       setTracks(response.data["top_tracks"]);
+      setIsHumming(false);
 
       console.log("Upload success:", response.data);
       setUploadProgress(0);
@@ -93,6 +104,7 @@ const QueryImage = () => {
               </div>
             )}
             {errorMessage && <div className="text-red-500 mt-3 text-sm">{errorMessage}</div>}
+            {responseTime !== null && <div className="mt-3 text-green-500 text-sm">Response Time: {responseTime} ms</div>}
           </div>
           <button type="submit" className="btn w-1/2 btn-success text-white text-lg">
             Upload

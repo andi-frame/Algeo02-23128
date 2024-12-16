@@ -37,6 +37,15 @@ def midi_to_pitch_array_with_tempo(midi_blob):
             - float: Tempo in BPM.
             - int: ticks_per_beat for the MIDI file.
     """
+
+    # If midi_blob is a BytesIO object, read it into bytes
+    if isinstance(midi_blob, io.BytesIO):
+        midi_blob = midi_blob.read()
+
+    # Ensure midi_blob is a bytes-like object
+    if not isinstance(midi_blob, bytes):
+        raise TypeError("Expected a bytes-like object, got {}".format(type(midi_blob)))
+
     midi = mido.MidiFile(file=io.BytesIO(midi_blob))
     melody_channel = detect_melody_channel(midi_blob)
     # print(f"Detected melody channel: {melody_channel}")
@@ -360,6 +369,3 @@ def process(path):
 # v2 = process("dewicut10.mid")
 # similarity_score = calculate_similarity(v1, v2)
 # print("Highest similarity score:", similarity_score)
-
-
-

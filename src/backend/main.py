@@ -11,6 +11,8 @@ import uuid
 import logging
 import numpy as np
 from backend.functions.Album_Finder import data_centering, singular_value_decomposition, query_projection, compute_euclidean_distance
+from backend.functions.audio import process, calculate_similarity
+
 app = FastAPI()
 
 origins = [
@@ -36,6 +38,7 @@ def upload_to_firebase(file_path, file_content, mimetype):
 async def upload_files(
     playlistName: str = Form(...),
     images: UploadFile = File(...),
+    playlistImage: UploadFile = File(...),
     audios: UploadFile = File(...),
     mapper: UploadFile = File(...)
 ):
@@ -44,15 +47,20 @@ async def upload_files(
 
         images_zip = zipfile.ZipFile(BytesIO(await images.read()))
         audios_zip = zipfile.ZipFile(BytesIO(await audios.read()))
+        playlistImages_content = await playlistImage.read()
         mapper_content = await mapper.read()
-        
         mapper_data = json.loads(mapper_content.decode('utf-8'))
 
+        # Upload playlist image
+        playlist_img_path = f"HMO/{playlistName}_{datetimenow}/playlist/{datetime.now().isoformat()}.png"
+        playlist_img_url = upload_to_firebase(playlist_img_path, playlistImages_content, "image/png")
+        
         playlist_id = str(uuid.uuid4())
         supabase.table('playlist').insert({
             'id': playlist_id,
             'name': playlistName,
-            'created_at': datetimenow
+            'created_at': datetimenow,
+            'img_url' : playlist_img_url
         }).execute()
 
         image_paths = [images_zip.open(item['pic_name']) for item in mapper_data]
@@ -64,6 +72,7 @@ async def upload_files(
             'uk': Uk.tolist(),
             'projections': projections.tolist()
         }).eq('id', playlist_id).execute()
+
         
         for idx, item in enumerate(mapper_data):
             name = item['audio_name']
@@ -80,9 +89,13 @@ async def upload_files(
             # Extract and upload audio
             audio_file = audios_zip.open(audio_filename)
             audio_content = audio_file.read()
-            audio_path = f"HMO/{playlistName}_{datetimenow}/audios/{name}_{datetime.now().isoformat()}.wav"
+            audio_path = f"HMO/{playlistName}_{datetimenow}/audios/{name}_{datetime.now().isoformat()}.mid"
             print(f"Uploading {audio_path}...\n")
-            audio_url = upload_to_firebase(audio_path, audio_content, "audio/wav")
+            audio_url = upload_to_firebase(audio_path, audio_content, "audio/midi")
+
+            # Extract audio file for processing
+            audio_blob = BytesIO(audio_content)
+            audio_vector = process(audio_blob)
 
             # Insert track into the database
             supabase.table('track').insert({
@@ -90,7 +103,8 @@ async def upload_files(
                 'name': name,
                 'image_url': image_url,
                 'music_url': audio_url,
-                'image_idx': idx
+                'image_idx': idx,
+                'processed_music': audio_vector,
             }).execute()
 
         return JSONResponse(content={"message": "Files uploaded successfully"})
@@ -100,6 +114,34 @@ async def upload_files(
         logging.error("Error during file upload: %s", e, exc_info=True)
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
+@app.get("/get-all-playlist")
+async def get_all_playlist():
+    try:
+        playlists = supabase.table("playlist").select("id, name, img_url").execute()
+        if not playlists.data:
+            raise HTTPException(status_code=404, detail="No playlists found")
+
+        return JSONResponse(content={"playlists": playlists.data})
+
+    except Exception as e:
+        print(f"Error getting playlists: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.get("/get-tracks-by-playlistId")
+async def get_tracks_by_playlistId(playlistId: str):
+    try:
+        # Query the tracks based on the playlist ID
+        tracks = supabase.table("track").select("id, name, image_url, music_url").eq("playlist_id", playlistId).execute()
+
+        if not tracks.data:
+            raise HTTPException(status_code=404, detail="No tracks found for this playlist")
+
+        return JSONResponse(content={"tracks": tracks.data})
+
+    except Exception as e:
+        print(f"Error fetching tracks for playlist {playlistId}: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+    
 
 @app.post("/query-by-image")
 async def query_by_image(
@@ -150,6 +192,42 @@ async def query_by_image(
         print("Error during query:", e)
         logging.error("Error during query: %s", e, exc_info=True)
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.post("/query-by-humming")
+async def query_by_humming(
+    query_midi: UploadFile = File(...), 
+    top_k: int = Form(...) 
+):
+    try:
+
+        midi_content = await query_midi.read()
+        midi_blob = BytesIO(midi_content)
+        midi_vector = process(midi_blob)
+        tracks = supabase.table("track").select("*").execute()
+
+        similarities = []
+        for track in tracks.data:
+            track_processed_data = track['processed_music']
+            similarity = calculate_similarity(midi_vector, track_processed_data)
+
+            similarities.append({
+                "id": track['id'],
+                "name": track['name'],
+                "similarity": similarity,
+                "music_url": track['music_url'],
+                "image_url": track['image_url'],
+            })
+
+        top_similar_tracks = sorted(similarities, key=lambda x: x['similarity'], reverse=True)[:top_k]
+        
+        return JSONResponse(content={"results": top_similar_tracks}, status_code=200)
+    
+    except Exception as e:
+        print("Error during query:", e)
+        logging.error("Error during query: %s", e, exc_info=True)
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
 
 
 if __name__ == "__main__":
