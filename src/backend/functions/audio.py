@@ -20,9 +20,11 @@ def detect_melody_channel(midi_file):
     melody_channel = max(channel_note_count, key=channel_note_count.get, default=0)
     return melody_channel
 
+import mido
+
 def midi_to_pitch_array_with_tempo(midi_file):
     """
-    Converts a MIDI file to an array of pitches per beat and retrieves tempo in BPM.
+    Converts a MIDI file to an array of pitches per quarter note and retrieves tempo in BPM.
     Automatically detects the melody channel.
 
     Args:
@@ -30,7 +32,7 @@ def midi_to_pitch_array_with_tempo(midi_file):
 
     Returns:
         tuple:
-            - list: Array of pitches where arr[i] is the pitch at beat i.
+            - list: Array of pitches where arr[i] is the pitch at quarter beat i.
             - float: Tempo in BPM.
             - int: ticks_per_beat for the MIDI file.
     """
@@ -40,7 +42,7 @@ def midi_to_pitch_array_with_tempo(midi_file):
     default_tempo = 500000
     tempo = default_tempo
     current_beat = 0
-    beat_pitches = []
+    quarter_pitches = []
 
     for track in midi.tracks:
         for msg in track:
@@ -48,22 +50,52 @@ def midi_to_pitch_array_with_tempo(midi_file):
                 tempo = msg.tempo
             if not msg.is_meta and hasattr(msg, 'time'):
                 delta_seconds = mido.tick2second(msg.time, midi.ticks_per_beat, tempo)
-                current_beat += delta_seconds * (1 / (60 / (60 * 1_000_000 / tempo)))
+                current_beat += delta_seconds * (8 / (60 / (60 * 1_000_000 / tempo)))
                 if msg.type == 'note_on' and msg.velocity > 0 and msg.channel == melody_channel:
-                    beat_pitches.append((current_beat, msg.note))
-    if not beat_pitches:
+                    quarter_pitches.append((current_beat, msg.note))
+    
+    if not quarter_pitches:
         print("No pitches detected in the MIDI file.")
         return [], 60 * 1_000_000 / tempo, midi.ticks_per_beat
-    max_beat = int(round(max(beat for beat, _ in beat_pitches)))
-    pitch_array = [-1] * (max_beat + 1)
+    
+    # Find the max quarter note
+    max_quarter_beat = int(round(max(quarter for quarter, _ in quarter_pitches)))
+    pitch_array = [-1] * (max_quarter_beat + 1)
 
-    for beat, pitch in beat_pitches:
-        idx = int(round(beat))
+    # Populate pitch array for each quarter note
+    for quarter, pitch in quarter_pitches:
+        idx = int(round(quarter))
         if idx < len(pitch_array):
             pitch_array[idx] = pitch
+    
     bpm = 60 * 1_000_000 / tempo
-
     return pitch_array, bpm, midi.ticks_per_beat
+
+def normalize_pitches(pitch_array, min_pitch=21, max_pitch=108):
+    """
+    Normalize pitch values to a specified range.
+    
+    Args:
+        pitch_array (list): List of pitch values (e.g., MIDI notes).
+        min_pitch (int): The minimum pitch value (e.g., MIDI note A0).
+        max_pitch (int): The maximum pitch value (e.g., MIDI note C8).
+        
+    Returns:
+        list: Normalized pitch values.
+    """
+    min_input_pitch = min(p for p in pitch_array if p != -1) 
+    max_input_pitch = max(p for p in pitch_array if p != -1)
+    if min_input_pitch == max_input_pitch:
+        return []
+    normalized_pitches = []
+    for pitch in pitch_array:
+        if pitch != -1:
+            normalized_pitch = min_pitch + (pitch - min_input_pitch) * (max_pitch - min_pitch) / (max_input_pitch - min_input_pitch)
+            normalized_pitches.append(int(round(normalized_pitch)))
+        else:
+            normalized_pitches.append(-1)
+
+    return normalized_pitches
 
 def filter_pitch_array(array):
     result = []
@@ -275,7 +307,7 @@ def cosine_similarity(vec1, vec2):
 
     return dot_product / (magnitude1 * magnitude2)
 
-def calculate_similarity(array1, array2, atb_weight=0.1, rtb_weight=0.6, ftb_weight=0.3):
+def calculate_similarity(array1, array2, atb_weight=0.6,rtb_weight=0.2, ftb_weight=0.2):
     """
     Calculate the similarity between two arrays of sets of 3 vectors using weighted cosine similarity.
 
@@ -313,17 +345,20 @@ def calculate_similarity(array1, array2, atb_weight=0.1, rtb_weight=0.6, ftb_wei
 def process(path):
     pitch_array, bpm, ticks_per_beat = midi_to_pitch_array_with_tempo(path)
     filtered = filter_pitch_array(pitch_array)
-    window_size = 20
-    hop_size = 4
+    print(len(filtered))
+    
+    window_size = 40
+    hop_size = 8
     windows = sliding_window(filtered, window_size=window_size, hop_size=hop_size)
-    hists = [convert_window_to_histograms(window) for window in windows]
+    normalized_windows = [normalize_pitches(window) for window in windows] 
+    hists = [convert_window_to_histograms(window) for window in normalized_windows]
     shrink_vector = [shrink_histograms(hist) for hist in hists]
     return shrink_vector
 
-# v1 = process("soj.mid")
-# v2 = process("query.mid")
-# similarity_score = calculate_similarity(v1, v2)
-# print("Highest similarity score:", similarity_score)
+v1 = process("naruto.mid")
+v2 = process("dewicut10.mid")
+similarity_score = calculate_similarity(v1, v2)
+print("Highest similarity score:", similarity_score)
 
 
 
