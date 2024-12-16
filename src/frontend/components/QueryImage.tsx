@@ -9,6 +9,7 @@ const QueryImage = () => {
   const [top, setTop] = useState<number>(0);
   const [image, setImage] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const setTracks = useAlbumStore((state) => state.setTracks);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,6 +22,19 @@ const QueryImage = () => {
 
   const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    setErrorMessage(null);
+
+    if (!image) {
+      setErrorMessage("Please select an image.");
+      return;
+    }
+
+    if (top <= 0) {
+      setErrorMessage("Please enter a positive number.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("top_k", String(top));
     formData.append("query_image", image as File);
@@ -78,6 +92,7 @@ const QueryImage = () => {
                 </div>
               </div>
             )}
+            {errorMessage && <div className="text-red-500 mt-3 text-sm">{errorMessage}</div>}
           </div>
           <button type="submit" className="btn w-1/2 btn-success text-white text-lg">
             Upload
