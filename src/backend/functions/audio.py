@@ -355,10 +355,10 @@ def process(path):
     shrink_vector = [shrink_histograms(hist) for hist in hists]
     return shrink_vector
 
-v1 = process("naruto.mid")
-v2 = process("dewicut10.mid")
-similarity_score = calculate_similarity(v1, v2)
-print("Highest similarity score:", similarity_score)
+# v1 = process("naruto.mid")
+# v2 = process("dewicut10.mid")
+# similarity_score = calculate_similarity(v1, v2)
+# print("Highest similarity score:", similarity_score)
 
 
 
