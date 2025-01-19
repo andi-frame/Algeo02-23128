@@ -34,6 +34,9 @@ def upload_to_firebase(file_path, file_content, mimetype):
     blob.make_public()
     return blob.public_url
 
+@app.get("/")
+async def health_check():
+    return "The health check is successful"
 
 @app.post("/upload")
 async def upload_files(
