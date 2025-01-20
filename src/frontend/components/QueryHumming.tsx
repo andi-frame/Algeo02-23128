@@ -11,7 +11,7 @@ const QueryHumming = () => {
   const [responseTime, setResponseTime] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const setTrackHummingList = useAlbumStore((state) => state.setTrackHummingList);
+  const setTracks = useAlbumStore((state) => state.setTracks); // Use the same setTracks function
   const setIsHumming = useAlbumStore((state) => state.setIsHumming);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,7 +28,7 @@ const QueryHumming = () => {
     setErrorMessage(null);
 
     if (!midi) {
-      setErrorMessage("Please select an image.");
+      setErrorMessage("Please select a MIDI file.");
       return;
     }
 
@@ -58,7 +58,7 @@ const QueryHumming = () => {
       const duration = endTime - startTime;
 
       setResponseTime(duration);
-      setTrackHummingList(response.data["results"]);
+      setTracks(response.data["top_tracks"]);
       setIsHumming(true);
 
       console.log("Upload success:", response.data);

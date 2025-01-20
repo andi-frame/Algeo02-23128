@@ -234,13 +234,12 @@ async def query_by_image(
     try:
         query_image_content = await query_image.read()
         query_image_blob = BytesIO(query_image_content)
-       
+
+        # Fetch playlist data with tracks
         svd_data_records = supabase.table('playlist').select('id, myu, uk, projections, name, track(id, image_url, music_url, name)').execute()
         svd_data = svd_data_records.data
 
-
         all_similarities = []
-
 
         for record in svd_data:
             myu = np.array(record['myu'])
@@ -250,17 +249,26 @@ async def query_by_image(
             playlist_name = record['name']
             tracks = record['track']
 
-
+            # Compute query projection
             query_proj = query_projection(query_image_blob, myu, Uk)
 
-
+            # Compute Euclidean distances
             distances = compute_euclidean_distance(query_proj, projections)
-            max_distance = max(distances)
 
+            # Ensure distances and tracks have the same length
+            if len(distances) != len(tracks):
+                print(f"Skipping playlist {playlist_id}: Mismatch between distances ({len(distances)}) and tracks ({len(tracks)})")
+                continue
+
+            # Check if distances array is empty
+            if distances.size == 0:
+                print(f"Skipping playlist {playlist_id}: Empty distances array")
+                continue
+
+            max_distance = np.max(distances)
 
             for idx, distance in enumerate(distances):
                 similarity_percentage = (1 - (distance / max_distance)) * 100
-
 
                 all_similarities.append({
                     'distance': distance,
@@ -273,12 +281,12 @@ async def query_by_image(
                     'track_name': tracks[idx]['name']
                 })
 
-
+        # Sort by distance and return top_k results
         all_similarities = sorted(all_similarities, key=lambda x: x['distance'])
         top_tracks = all_similarities[:top_k]
 
-
         return JSONResponse(content={"top_tracks": top_tracks})
+
     except Exception as e:
         print("Error during query:", e)
         logging.error("Error during query: %s", e, exc_info=True)
@@ -293,43 +301,40 @@ async def query_by_humming(
     top_k: int = Form(...)
 ):
     try:
-
-
         midi_content = await query_midi.read()
         midi_blob = BytesIO(midi_content)
         midi_vector = process(midi_blob)
-        tracks = supabase.table("track").select("*").execute()
 
+        # Fetch all tracks with their associated playlist data
+        tracks_data = supabase.table("track").select("*, playlist(id, name)").execute()
 
         similarities = []
-        for track in tracks.data:
+
+        for track in tracks_data.data:
             track_processed_data = track['processed_music']
             similarity = calculate_similarity(midi_vector, track_processed_data)
 
+            # Calculate distance from similarity (assuming similarity is between 0 and 1)
+            distance = 1 - similarity
 
+            # Append the track data with the required structure
             similarities.append({
-                "id": track['id'],
-                "name": track['name'],
-                "similarity": similarity,
-                "music_url": track['music_url'],
-                "image_url": track['image_url'],
+                'distance': distance,
+                'similarity_percentage': round(similarity * 100, 2),  # Convert to percentage
+                'playlist_id': track['playlist']['id'],
+                'playlist_name': track['playlist']['name'],
+                'track_idx': track['image_idx'],  # Assuming image_idx is the track index
+                'image_url': track['image_url'],
+                'music_url': track['music_url'],
+                'track_name': track['name']
             })
 
+        # Sort by distance (ascending) and return top_k results
+        top_similar_tracks = sorted(similarities, key=lambda x: x['distance'])[:top_k]
 
-        top_similar_tracks = sorted(similarities, key=lambda x: x['similarity'], reverse=True)[:top_k]
-       
-        return JSONResponse(content={"results": top_similar_tracks}, status_code=200)
-   
+        return JSONResponse(content={"top_tracks": top_similar_tracks}, status_code=200)
+
     except Exception as e:
         print("Error during query:", e)
         logging.error("Error during query: %s", e, exc_info=True)
         return JSONResponse(content={"error": str(e)}, status_code=500)
-
-
-
-
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

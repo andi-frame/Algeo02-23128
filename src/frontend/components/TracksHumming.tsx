@@ -3,7 +3,7 @@ import { useAlbumStore } from "@/store/AlbumStore";
 import TrackHummingCard from "./TrackHummingCard";
 
 const TracksHumming = () => {
-  const tracks = useAlbumStore((state) => state.trackHummingList);
+  const tracks = useAlbumStore((state) => state.tracks);
   return (
     <div className="w-full flex flex-col justify-center items-center text-white cursor-pointer">
       <div className="w-2/3 text-left text-2xl font-semibold ml-10 mb-5">Tracks You Looking For {"(by Humming)"}</div>
