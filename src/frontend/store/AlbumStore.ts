@@ -39,12 +39,14 @@ interface TrackAlbumType {
   playlists: PlaylistType[] | null;
   trackList: TrackListType[] | null;
   trackHummingList: TrackHumming[] | null;
+  selectedPlaylist: PlaylistType | null;
   setTracks: (tracksData: TrackType[] | null) => void;
   setPlaylists: (playlistsData: PlaylistType[] | null) => void;
   setNowPlaying: (trackNow: TrackType | null) => void;
   setTrackList: (tracksData: TrackListType[] | null) => void;
   setIsHumming: (isHummingData: boolean | null) => void;
   setTrackHummingList: (trackHummingData: TrackHumming[] | null) => void;
+  setSelectedPlaylist: (selectedPlaylist: PlaylistType | null) => void;
 }
 
 export const useAlbumStore = create<TrackAlbumType>((set) => ({
@@ -54,6 +56,7 @@ export const useAlbumStore = create<TrackAlbumType>((set) => ({
   trackList: null,
   isHumming: null,
   trackHummingList: null,
+  selectedPlaylist: null,
   setTracks: (tracksData) => {
     set({ tracks: tracksData });
   },
@@ -71,5 +74,8 @@ export const useAlbumStore = create<TrackAlbumType>((set) => ({
   },
   setTrackHummingList: (trackHummingData) => {
     set({ trackHummingList: trackHummingData });
+  },
+  setSelectedPlaylist: (selectedPlaylist) => {
+    set({ selectedPlaylist: selectedPlaylist });
   },
 }));
