@@ -16,11 +16,13 @@
     "embla-carousel-react": "^8.5.1",
     "firebase": "^11.0.2",
     "lucide-react": "^0.468.0",
+    "midi-player-js": "^2.0.16",
     "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "tone": "^15.0.4",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
