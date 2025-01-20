@@ -81,7 +81,7 @@ const QueryImage = () => {
             <input
               className="file-input file-input-success file-input-bordered bg-white text-spotify-black-2"
               type="file"
-              accept=".png"
+              accept=".jpg"
               name="image"
               onChange={handleChange}
             />
