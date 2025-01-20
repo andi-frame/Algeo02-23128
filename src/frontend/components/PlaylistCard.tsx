@@ -8,8 +8,10 @@ import React from "react";
 const PlaylistCard = ({ playlist }: { playlist: PlaylistType }) => {
   const router = useRouter();
   const setTrackList = useAlbumStore((state) => state.setTrackList);
+  const setSelectedPlaylist = useAlbumStore((state) => state.setSelectedPlaylist);
 
   const handlePlaylistOnClick = async () => {
+    setSelectedPlaylist(playlist);
     try {
       const response = await api.get(`/get-tracks-by-playlistId?playlistId=${playlist.id}`);
       if (response.data && response.data.tracks) {

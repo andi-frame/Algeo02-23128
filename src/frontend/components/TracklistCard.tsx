@@ -25,10 +25,10 @@ const TracklistCard = ({ track }: { track: TrackListType }) => {
   return (
     <div
       onClick={handleTrackOnClick}
-      className="w-2/3 card card-compact hover:bg-spotify-black-1 p-2 rounded-xl cursor-pointer flex flex-row">
+      className="w-2/5 card card-compact hover:bg-spotify-black-2 p-2 rounded-xl cursor-pointer flex flex-row items-center">
       <figure>
         <Image
-          className="hover:scale-105 duration-500 transition-all rounded-2xl w-40 h-40"
+          className="hover:scale-105 duration-500 transition-all rounded-2xl w-20 h-20"
           priority
           width={300}
           height={300}
@@ -37,7 +37,7 @@ const TracklistCard = ({ track }: { track: TrackListType }) => {
         />
       </figure>
       <div className="mx-5">
-        <div className="text-xl font-semibold mb-5">{track.name}</div>
+        <div className="text-xl font-semibold">{track.name}</div>
         <div>{track.name}</div>
       </div>
     </div>
