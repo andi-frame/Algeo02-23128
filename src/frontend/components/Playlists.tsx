@@ -1,11 +1,9 @@
 "use client";
 
-
 import React, { useEffect, useState } from "react";
 import PlaylistCard from "./PlaylistCard";
 import api from "@/api";
 import { useAlbumStore } from "@/store/AlbumStore";
-
 
 const Playlists = () => {
   const setPlaylists = useAlbumStore((state) => state.setPlaylists);
@@ -14,7 +12,6 @@ const Playlists = () => {
   // const [limit, setLimit] = useState(10);
   const [maxPage, setMaxPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-
 
   // Pagination
   const fetchPlaylists = async (page: number) => {
@@ -34,26 +31,21 @@ const Playlists = () => {
     }
   };
 
-
   useEffect(() => {
     fetchPlaylists(page);
   }, [page]);
-
 
   const previousClicked = async () => {
     setPage((prev) => (prev > 1 ? prev - 1 : 1));
   };
 
-
   const nextClicked = async () => {
     setPage((prev) => (prev < maxPage ? prev + 1 : maxPage));
   };
 
-
   // Search Playlist
   const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
 
     try {
       const response = await api.get("search-playlists", {
@@ -61,7 +53,6 @@ const Playlists = () => {
           playlist_name: searchQuery,
         },
       });
-
 
       if (response.data && response.data.playlists) {
         setPlaylists(response.data.playlists);
@@ -73,7 +64,6 @@ const Playlists = () => {
       setPlaylists([]);
     }
   };
-
 
   return (
     <div className="w-full flex flex-col justify-center items-center text-white">
@@ -95,19 +85,21 @@ const Playlists = () => {
         {playlists && playlists.map((playlist, index) => <PlaylistCard key={index} playlist={playlist} />)}
       </div>
       <div className="justify-around items-center w-4/5 flex mt-10">
-        <button className="btn btn-success text-white text-lg w-1/8 rounded-3xl" onClick={previousClicked}>
+        <button className="btn btn-success text-white text-lg w-1/8 rounded-3xl" onClick={previousClicked} disabled={page === 1}>
           {"< Previous"}
         </button>
         <p>
           Page: {page} / {maxPage}
         </p>
-        <button className="btn btn-success text-white text-lg w-1/8 rounded-3xl" onClick={nextClicked}>
+        <button
+          className="btn btn-success text-white text-lg w-1/8 rounded-3xl"
+          onClick={nextClicked}
+          disabled={page === maxPage}>
           {"Next >"}
         </button>
       </div>
     </div>
   );
 };
-
 
 export default Playlists;
