@@ -37,7 +37,6 @@ def midi_to_pitch_array_with_tempo(midi_blob):
             - float: Tempo in BPM.
             - int: ticks_per_beat for the MIDI file.
     """
-
     # If midi_blob is a BytesIO object, read it into bytes
     if isinstance(midi_blob, io.BytesIO):
         midi_blob = midi_blob.read()
@@ -332,21 +331,31 @@ def calculate_similarity(array1, array2, atb_weight=0.6,rtb_weight=0.2, ftb_weig
         float: The highest similarity score between the two arrays.
     """
     highest_similarity = 0.0
-
-    for set1 in array1:
-        for set2 in array2:
-            # Calculate cosine similarity for each histogram type
-            atb_similarity = cosine_similarity(set1['ATB'], set2['ATB'])
-            rtb_similarity = cosine_similarity(set1['RTB'], set2['RTB'])
-            ftb_similarity = cosine_similarity(set1['FTB'], set2['FTB'])
-            total_similarity = (
+    j = 0
+    array1_length = len(array1)
+    array2_length = len(array2)
+    for j in range(int(array2_length - array1_length/2)):
+        i = 0
+        total_similarity = 0
+        count = 0
+        while (i != array1_length and j != array2_length):
+            count += 1
+            atb_similarity = cosine_similarity(array1[i]['ATB'], array2[j]['ATB'])
+            rtb_similarity = cosine_similarity(array1[i]['RTB'], array2[j]['RTB'])
+            ftb_similarity = cosine_similarity(array1[i]['FTB'], array2[j]['FTB'])
+            total_similarity += (
                 atb_weight * atb_similarity +
                 rtb_weight * rtb_similarity +
                 ftb_weight * ftb_similarity
             )
-            if total_similarity > highest_similarity:
+            i += 1
+            j += 1
+        if (count == 0):
+            total_similarity = 0.0
+        else :
+            total_similarity /= count
+        if total_similarity > highest_similarity:
                 highest_similarity = total_similarity
-
     return highest_similarity
 
 # Example usage:
