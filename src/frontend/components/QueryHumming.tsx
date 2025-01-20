@@ -11,7 +11,7 @@ const QueryHumming = () => {
   const [responseTime, setResponseTime] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const setTracks = useAlbumStore((state) => state.setTracks); // Use the same setTracks function
+  const setTracks = useAlbumStore((state) => state.setTracks);
   const setIsHumming = useAlbumStore((state) => state.setIsHumming);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
